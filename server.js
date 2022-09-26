@@ -8,8 +8,8 @@ const PORT = process.env.PORT || 5000;
 //connect db
 connectDB();
 
+app.use(express.json());
 app.use(cors());
-
 app.get('/',(req,res)=>{
     res.send('API running...')
 });
