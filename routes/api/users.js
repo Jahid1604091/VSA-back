@@ -7,14 +7,6 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
 
-//@route    GET api/users
-//@desc     get all users
-//@access   Public
-router.get('/',(req,res)=>{
-    res.send("users")
-})
-
-
 //@route    POST api/users
 //@desc     sign up
 //@access   Public
