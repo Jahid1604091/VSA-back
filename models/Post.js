@@ -22,10 +22,13 @@ const PostSchema = new Schema({
   likes: [
     {
       user: {
-        type: Schema.Types.ObjectId
+        type: Schema.Types.ObjectId,ref:'user'
       }
     }
   ],
+  views:{
+    type:Number,
+  },
   date: {
     type: Date,
     default: Date.now

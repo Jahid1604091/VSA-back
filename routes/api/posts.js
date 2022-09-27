@@ -28,6 +28,7 @@ router.post(
         video_url: req.body.v_url,
         name: user.name,
         avatar: user.avatar,
+        views:0,
         user: req.user.id
       });
 
@@ -43,8 +44,8 @@ router.post(
 
 // @route    GET api/posts
 // @desc     Get all posts
-// @access   Private
-router.get('/', auth, async (req, res) => {
+// @access   Public
+router.get('/', async (req, res) => {
   try {
     const posts = await Post.find().sort({ date: -1 });
     res.json(posts);
@@ -56,16 +57,23 @@ router.get('/', auth, async (req, res) => {
 
 // @route    GET api/posts/:id
 // @desc     Get post by ID
-// @access   Private
-router.get('/:id', auth, checkObjectId('id'), async (req, res) => {
+// @access   Public
+router.get('/:id', checkObjectId('id'), async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id);
-
+    const post = await Post.findById(req.params.id).populate('user','name');
+    let likedIds = []
+    post.likes.forEach(element => {
+        likedIds.push(element.user)
+    });
+    
+    // console.log(likedIds)
     if (!post) {
-      return res.status(404).json([{ msg: 'Post not found' }]);
+        return res.status(404).json([{ msg: 'Post not found' }]);
     }
-
-    res.json(post);
+    
+    const likedUsers = await User.find({ _id: { $in: likedIds } }).select('-password');
+  
+    res.json({post,likedUsers});
   } catch (err) {
     console.error(err.message);
 
@@ -148,5 +156,18 @@ router.put('/unlike/:id', auth, checkObjectId('id'), async (req, res) => {
   }
 });
 
-
+// @route    PUT api/posts/views/:id
+// @desc     update views
+// @access   Public
+router.put('/views/:id', checkObjectId('id'), async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id);
+    post.views = post.views + 1;
+    await post.save();
+    return res.json(post);
+  } catch (err) {
+    console.error(err.message);
+    res.status(500).send('Server Error');
+  }
+});
 module.exports = router;
