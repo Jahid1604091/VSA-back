@@ -25,7 +25,7 @@ router.post(
 
       const newPost = new Post({
         text: req.body.text,
-        video_url: req.body.v_url,
+        video_id:req.body.v_url.split("v=")[1].split("&")[0],
         name: user.name,
         avatar: user.avatar,
         views:0,
@@ -111,7 +111,7 @@ router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
 
     await post.remove();
 
-    res.json([{ msg: 'Post removed' }]);
+    res.json(post);
   } catch (err) {
     console.error(err.message);
 
@@ -176,7 +176,7 @@ router.put('/views/:id', checkObjectId('id'), async (req, res) => {
     const post = await Post.findById(req.params.id);
     post.views = post.views + 1;
     await post.save();
-    return res.json(post);
+    return res.json(post.views);
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');

@@ -9,7 +9,7 @@ const PostSchema = new Schema({
     type: String,
     required: true
   },
-  video_url: {
+  video_id: {
     type: String,
     required: true
   },
