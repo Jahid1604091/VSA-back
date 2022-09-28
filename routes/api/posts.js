@@ -25,10 +25,10 @@ router.post(
 
       const newPost = new Post({
         text: req.body.text,
-        video_id:req.body.v_url.split("v=")[1].split("&")[0],
+        video_id: req.body.v_url.split("v=")[1].split("&")[0],
         name: user.name,
         avatar: user.avatar,
-        views:0,
+        views: 0,
         user: req.user.id
       });
 
@@ -57,9 +57,9 @@ router.get('/', async (req, res) => {
 // @route    GET api/posts/me
 // @desc     Get all my posts
 // @access   Protected
-router.get('/me', auth,async (req, res) => {
+router.get('/me', auth, async (req, res) => {
   try {
-    const posts = await Post.find({user:req.user.id}).sort({ date: -1 });
+    const posts = await Post.find({ user: req.user.id }).sort({ date: -1 });
     res.json(posts);
   } catch (err) {
     console.error(err.message);
@@ -72,20 +72,20 @@ router.get('/me', auth,async (req, res) => {
 // @access   Public
 router.get('/:id', checkObjectId('id'), async (req, res) => {
   try {
-    const post = await Post.findById(req.params.id).populate('user','name');
+    const post = await Post.findById(req.params.id).populate('user', 'name');
     let likedIds = []
     post.likes.forEach(element => {
-        likedIds.push(element.user)
+      likedIds.push(element.user)
     });
-    
+
     // console.log(likedIds)
     if (!post) {
-        return res.status(404).json([{ msg: 'Post not found' }]);
+      return res.status(404).json([{ msg: 'Post not found' }]);
     }
-    
+
     const likedUsers = await User.find({ _id: { $in: likedIds } }).select('-password');
-  
-    res.json({post,likedUsers});
+
+    res.json({ post, likedUsers });
   } catch (err) {
     console.error(err.message);
 
@@ -125,17 +125,23 @@ router.delete('/:id', [auth, checkObjectId('id')], async (req, res) => {
 router.put('/like/:id', auth, checkObjectId('id'), async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-
-    // Check if the post has already been liked
-    if (post.likes.some((like) => like.user.toString() === req.user.id)) {
-      return res.status(400).json([{ msg: 'Post already liked' }]);
+    // Check user
+    if (post.user.toString() !== req.user.id) {
+      return res.status(401).json([{ msg: 'Please sign in first' }]);
     }
-
-    post.likes.unshift({ user: req.user.id });
-
-    await post.save();
-
-    return res.json(post.likes);
+    else{
+      // Check if the post has already been liked
+      if (post.likes.some((like) => like.user.toString() === req.user.id)) {
+        return res.status(400).json([{ msg: 'Post already liked' }]);
+      }
+  
+      post.likes.unshift({ user: req.user.id });
+  
+      await post.save();
+  
+      return res.json(post.likes);
+      
+    }
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
@@ -148,20 +154,26 @@ router.put('/like/:id', auth, checkObjectId('id'), async (req, res) => {
 router.put('/unlike/:id', auth, checkObjectId('id'), async (req, res) => {
   try {
     const post = await Post.findById(req.params.id);
-
-    // Check if the post has not yet been liked
-    if (!post.likes.some((like) => like.user.toString() === req.user.id)) {
-      return res.status(400).json([{ msg: 'Post has not yet been liked' }]);
+    // Check user
+    if (post.user.toString() !== req.user.id) {
+      return res.status(401).json([{ msg: 'Please sign in first' }]);
     }
+    else{
 
-    // remove the like
-    post.likes = post.likes.filter(
-      ({ user }) => user.toString() !== req.user.id
-    );
-
-    await post.save();
-
-    return res.json(post.likes);
+      // Check if the post has not yet been liked
+      if (!post.likes.some((like) => like.user.toString() === req.user.id)) {
+        return res.status(400).json([{ msg: 'Post has not yet been liked' }]);
+      }
+  
+      // remove the like
+      post.likes = post.likes.filter(
+        ({ user }) => user.toString() !== req.user.id
+      );
+  
+      await post.save();
+  
+      return res.json(post.likes);
+    }
   } catch (err) {
     console.error(err.message);
     res.status(500).send('Server Error');
