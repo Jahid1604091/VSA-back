@@ -1,7 +1,6 @@
 const mongoose = require('mongoose');
 // const db = `mongodb://localhost:27017/vsaDB`;
-const db = `mongodb+srv://fruits:ilovedad62358@cluster0.eohva.mongodb.net/vsaDB`;
-
+const db = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.eohva.mongodb.net/vsaDB`;
 const connectDB = async () => {
     try {
         const conn = await mongoose.connect(db, {
